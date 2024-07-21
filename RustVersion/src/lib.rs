@@ -35,6 +35,11 @@ pub mod color_distance {
                 blue: all[2],
             }
         }
+        
+        #[inline]
+        pub fn to_precise(self) -> PreciseRGB {
+            self.into()
+        }
 
         pub fn new_from_number(number: u32) -> Self {
             let red = ((number >> 16) & 0xFF) as u8;
@@ -45,13 +50,24 @@ pub mod color_distance {
         }
     }
 
+    impl From<RGB> for PreciseRGB {
+        #[inline]
+        fn from(value: RGB) -> Self {
+            PreciseRGB {
+                red: value.red as f64,
+                green: value.green as f64,
+                blue: value.blue as f64,
+            }
+        }
+    }
+
     impl fmt::Display for RGB {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             write!(f, "0x{:02x}{:02x}{:02x}", self.red, self.green, self.blue)
         }
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Copy, Default)]
     pub struct PreciseRGB {
         pub red: f64,
         pub green: f64,
