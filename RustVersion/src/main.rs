@@ -47,20 +47,20 @@ fn main() {
         ("pink", RGB::new_from_array([243, 139, 170])),
     ]
     .iter()
-    .cloned()
+    .copied()
     .collect();
 
     let red_colors = colors
         .values()
-        .map(|color| color.red as f64)
+        .map(|color| f64::from(color.red))
         .collect::<Vec<_>>();
     let green_colors = colors
         .values()
-        .map(|color| color.green as f64)
+        .map(|color| f64::from(color.green))
         .collect::<Vec<_>>();
     let blue_colors = colors
         .values()
-        .map(|color| color.blue as f64)
+        .map(|color| f64::from(color.blue))
         .collect::<Vec<_>>();
 
     let args: Vec<String> = env::args().collect();
@@ -90,12 +90,11 @@ fn main() {
         target_color_pre.green /= 255.;
         target_color_pre.blue /= 255.;
 
-
         let penalty = |w, colors: &[f64]| {
             let color_diff = colors
-                .into_iter()
-                .map(|color| (w as f64 - color))
-                .fold(f64::INFINITY, |a, b| a.min(b))
+                .iter()
+                .map(|color| (w - color))
+                .fold(f64::INFINITY, f64::min)
                 * (1. / 255.)
                 * 0.;
             let x = color_diff;
@@ -157,9 +156,8 @@ fn main() {
             }
             // println!("loss: {}", loss_r + loss_g + loss_b);
             // println!("dist: {}, loss: {}", loss, loss_r + loss_g + loss_b);
-            // println!("init colors: {init_colors:?}")
+            // println!("init colors: {init_colors:?}");
         }
-
         // println!("init colors: {trainable_colors:?}");
         // let preds = forward(&trainable_colors);
         // println!("preds: {preds:?}, targets: {target_color:?}");
@@ -185,9 +183,9 @@ fn main() {
         // if dist <= 11. / init_colors.len() as f64 {
         //     pruned_colors.extend(&results);
         // }
-
-        // dynamisch anpassen lassen 
-        if dist <= 6.  {
+        println!("{dist}");
+        // dynamisch anpassen lassen
+        if dist <= 32. {
             for result in results {
                 pruned_colors.insert(result);
                 if pruned_colors.len() == 7 {
@@ -195,13 +193,20 @@ fn main() {
                 }
             }
         }
-
+        println!("prunded colors length: {}", pruned_colors.len());
         // println!("out color: {out_color:?}, dist: {dist:?}");
     }
-    println!("pruned_colors: {pruned_colors:?}, pc len: {}, all colors: {}", pruned_colors.len(), colors.len());
+    // println!(
+    //     "pruned_colors: {pruned_colors:?}, pc len: {}, all colors: {}",
+    //     pruned_colors.len(),
+    //     colors.len()
+    // );
     // return;
 
-    let colors = pruned_colors.iter().map(|color| (*color, colors.get(color).copied().unwrap())).collect::<HashMap<_, _>>();
+    let colors = pruned_colors
+        .iter()
+        .map(|color| (*color, colors.get(color).copied().unwrap()))
+        .collect::<HashMap<_, _>>();
     let results = find_closest_panes(target_color, colors);
     Results::print(&results)
 }
@@ -246,7 +251,7 @@ fn find_closest_panes(target_color: RGB, available_colors: HashMap<&str, RGB>) -
             let handle = s.spawn(move |_| {
                 generate_combinations(
                     1,
-                    5,
+                    6,
                     &mut f64::INFINITY,
                     &mut vec![starting_color],
                     available_colors.clone(),
