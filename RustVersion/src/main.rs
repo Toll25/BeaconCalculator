@@ -183,7 +183,7 @@ fn main() {
         // if dist <= 11. / init_colors.len() as f64 {
         //     pruned_colors.extend(&results);
         // }
-        println!("{dist}");
+        // println!("{dist}");
         // dynamisch anpassen lassen
         if dist <= 32. {
             for result in results {
@@ -193,7 +193,7 @@ fn main() {
                 }
             }
         }
-        println!("prunded colors length: {}", pruned_colors.len());
+        // println!("prunded colors length: {}", pruned_colors.len());
         // println!("out color: {out_color:?}, dist: {dist:?}");
     }
     // println!(
