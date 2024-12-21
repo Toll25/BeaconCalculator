@@ -1,4 +1,4 @@
-use color_utils::{calculate_distance, convert_panes_to_rgb, PreciseRGB, RGB};
+use color_utils::{calculate_distance, PreciseRGB, RGB};
 use core::f64;
 use std::{
     cmp::Ordering,
@@ -7,6 +7,7 @@ use std::{
     thread::{self},
 };
 mod color_utils;
+pub use color_utils::convert_panes_to_rgb;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
