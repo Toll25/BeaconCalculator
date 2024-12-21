@@ -4,3 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+deltae = "0.3.2"
+itertools = "0.13.0"
+lab = "0.11.0"
+
+[[example]]
+name = "pinkish_red"
