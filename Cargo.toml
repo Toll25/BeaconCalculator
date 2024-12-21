@@ -1,7 +1,11 @@
 [package]
-name = "beacon-calculator-v2"
-version = "0.1.0"
+name = "beacon-calculator"
+version = "1.0.0"
 edition = "2021"
+description = "A library for calculating what colors of glass you need to color a minecraft beacon a certain way"
+repository = "https://github.com/Toll25/BeaconCalculator"
+license-file = "LICENSE"
+keywords = ["minecraft", "beacon", "color", "rgb"]
 
 [dependencies]
 deltae = "0.3.2"
