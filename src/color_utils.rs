@@ -49,7 +49,6 @@ impl PreciseRGB {
 }
 
 impl From<RGB> for PreciseRGB {
-    #[inline]
     fn from(value: RGB) -> Self {
         Self {
             red: f64::from(value.red),
@@ -81,10 +80,8 @@ pub fn calculate_distance(color: PreciseRGB, target: RGB) -> f64 {
     f64::from(*de0.value())
 }
 
-pub fn convert_panes_to_rgb(
-    panes: &[String],
-    available_colors: &HashMap<String, RGB>,
-) -> PreciseRGB {
+#[allow(clippy::implicit_hasher)]
+pub fn calculate_color_from_panes(panes: &[String], colors: &HashMap<String, RGB>) -> PreciseRGB {
     let n = panes.len();
 
     if n == 0 {
@@ -96,13 +93,13 @@ pub fn convert_panes_to_rgb(
     for (i, pane) in panes.iter().enumerate().skip(1) {
         #[allow(clippy::cast_possible_truncation)]
         let weight = f64::from(2u32.pow((i - 1) as u32));
-        let color = available_colors.get(pane).unwrap();
+        let color = colors[pane];
         sum_colors.red += weight * f64::from(color.red);
         sum_colors.green += weight * f64::from(color.green);
         sum_colors.blue += weight * f64::from(color.blue);
     }
 
-    let first_color = available_colors.get(&panes[0]).unwrap();
+    let first_color = colors[&panes[0]];
     sum_colors.red += f64::from(first_color.red);
     sum_colors.green += f64::from(first_color.green);
     sum_colors.blue += f64::from(first_color.blue);

@@ -7,7 +7,7 @@ use std::{
     thread::{self},
 };
 mod color_utils;
-pub use color_utils::convert_panes_to_rgb;
+pub use color_utils::calculate_color_from_panes;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
@@ -42,7 +42,7 @@ impl Panes {
         available_colors: &HashMap<String, RGB>,
         target: RGB,
     ) -> Self {
-        let color = convert_panes_to_rgb(panes, available_colors);
+        let color = calculate_color_from_panes(panes, available_colors);
         let dist = calculate_distance(color, target);
         Self {
             panes: panes.to_vec(),
@@ -73,8 +73,8 @@ pub fn get_standard_colors() -> HashMap<String, [u8; 3]> {
     ])
 }
 
-pub fn convert_panes_to_rgb_default(panes: &[String]) -> PreciseRGB {
-    convert_panes_to_rgb(panes, &convert_colors(&get_standard_colors()))
+pub fn calculate_color_from_panes_default(panes: &[String]) -> PreciseRGB {
+    calculate_color_from_panes(panes, &convert_colors(&get_standard_colors()))
 }
 
 #[allow(clippy::implicit_hasher)]
@@ -84,11 +84,11 @@ pub fn calculate_color_custom_colors(
     depth: u8,
     cutoff: u8,
 ) {
-    calculate_color(color, &convert_colors(colors), depth, cutoff);
+    find_combination(color, &convert_colors(colors), depth, cutoff);
 }
 
-pub fn calculate_color_custom(color: [u8; 3], depth: u8, cutoff: u8) {
-    calculate_color(
+pub fn find_combination_custom(color: [u8; 3], depth: u8, cutoff: u8) {
+    find_combination(
         color,
         &convert_colors(&get_standard_colors()),
         depth,
@@ -96,10 +96,10 @@ pub fn calculate_color_custom(color: [u8; 3], depth: u8, cutoff: u8) {
     );
 }
 
-pub fn calculate_color_default(color: [u8; 3]) -> Option<Panes> {
+pub fn find_combination_default(color: [u8; 3]) -> Option<Panes> {
     let depth = 6;
     let cutoff = 6;
-    calculate_color(
+    find_combination(
         color,
         &convert_colors(&get_standard_colors()),
         depth,
@@ -117,7 +117,7 @@ fn convert_colors(colors: &HashMap<String, [u8; 3]>) -> HashMap<String, RGB> {
 }
 
 #[allow(clippy::implicit_hasher)]
-fn calculate_color(
+fn find_combination(
     color: [u8; 3],
     colors: &HashMap<String, RGB>,
     depth: u8,
@@ -130,82 +130,85 @@ fn calculate_color(
     if usize::from(cutoff) >= colors.len() {
         return None;
     }
-    let mut all = recursive(colors, 0, depth, color, cutoff, &Vec::new());
+    let mut all = calculate_combinations_recursively(colors, 0, depth, color, cutoff, &Vec::new());
     all.sort();
+    dbg!(&all[0]);
     Some(all[0].clone())
 }
 
-fn recursive(
-    available_colors: &HashMap<String, RGB>,
+fn calculate_combinations_recursively(
+    colors: &HashMap<String, RGB>,
     depth: u8,
-    target_depth: u8,
+    max_depth: u8,
     target: RGB,
     cutoff: u8,
     base_panes: &[String],
 ) -> Vec<Panes> {
-    if depth == target_depth {
-        return vec![Panes::from_panes_vec(base_panes, available_colors, target)];
+    if depth == max_depth {
+        return vec![Panes::from_panes_vec(base_panes, colors, target)];
     }
 
-    let mut end_dists = Vec::new();
+    let mut possibilities = Vec::new();
 
-    let dists = get_dists(base_panes, available_colors, target);
-    let new_dists = drop_entries(&dists, cutoff);
-    for dis in new_dists {
-        let mut temp: Vec<String> = base_panes.to_vec();
-        temp.push(dis.0);
-        end_dists.push(temp);
+    let dists = get_distances(base_panes, colors, target);
+    let trimmed_dists = drop_entries(&dists, cutoff);
+    for dist in trimmed_dists {
+        let mut possibility: Vec<String> = base_panes.to_vec();
+        possibility.push(dist.0);
+        possibilities.push(possibility);
     }
 
     let mut collection = Vec::new();
-    for posi in end_dists {
-        collection.extend(recursive(
-            available_colors,
+    for possibility in possibilities {
+        collection.extend(calculate_combinations_recursively(
+            colors,
             depth + 1,
-            target_depth,
+            max_depth,
             target,
             cutoff,
-            &posi,
+            &possibility,
         ));
     }
     collection
 }
 
-fn drop_entries(entries: &[(String, f64)], limit: u8) -> Vec<(String, f64)> {
-    let mut entries = entries.to_owned();
-    entries.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
-    entries.into_iter().take(usize::from(limit)).collect()
+fn drop_entries(distance_pairs: &[(String, f64)], cutoff: u8) -> Vec<(String, f64)> {
+    let mut distance_pairs = distance_pairs.to_owned();
+    distance_pairs.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+    distance_pairs
+        .into_iter()
+        .take(usize::from(cutoff))
+        .collect()
 }
 
-fn get_dists(
+fn get_distances(
     panes: &[String],
     available_colors: &HashMap<String, RGB>,
     target: RGB,
 ) -> Vec<(String, f64)> {
-    let (tx, rx) = channel();
+    let (sender, reciever) = channel();
     thread::scope(|x| {
         let mut panes = panes.to_vec();
-        let mut handles = Vec::new();
         for color in available_colors {
-            let tx1 = tx.clone();
+            let sender_clone = sender.clone();
             panes.push(color.0.clone());
             let new_panes = panes.clone();
-            handles.push(x.spawn(move || {
-                let _ = tx1.send((
+            x.spawn(move || {
+                let _ = sender_clone.send((
                     color.0.clone(),
-                    calculate_distance(convert_panes_to_rgb(&new_panes, available_colors), target),
+                    calculate_distance(
+                        calculate_color_from_panes(&new_panes, available_colors),
+                        target,
+                    ),
                 ));
-            }));
+            });
             panes.pop();
         }
-        drop(tx);
-        for handle in handles {
-            let _ = handle.join();
-        }
+        drop(sender);
     });
-    let mut dists = Vec::new();
-    for message in rx {
-        dists.push(message);
+    let mut distance_pairs = Vec::new();
+    for message in reciever {
+        distance_pairs.push(message);
     }
-    dists
+    distance_pairs
 }
