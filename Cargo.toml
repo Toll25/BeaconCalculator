@@ -9,8 +9,10 @@ keywords = ["minecraft", "beacon", "color", "rgb"]
 
 [dependencies]
 deltae = "0.3.2"
-itertools = "0.13.0"
 lab = "0.11.0"
 
 [[example]]
 name = "pinkish_red"
+
+[[example]]
+name = "panes_red_green"

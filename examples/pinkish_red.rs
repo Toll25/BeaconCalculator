@@ -1,5 +1,6 @@
 use beacon_calculator::find_combination_default;
 
 fn main() {
-    find_combination_default([254, 44, 84]);
+    let x = find_combination_default([254, 44, 84]).unwrap();
+    dbg!(x);
 }
