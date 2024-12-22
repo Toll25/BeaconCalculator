@@ -16,7 +16,7 @@
 //!
 //! ```
 //! Returns:
-//! ```
+//! ```ignore
 //! Some(Panes {
 //!     panes: [
 //!         "pink",
@@ -53,7 +53,7 @@
 //! ]);
 //! ```
 //! Returns:
-//! ```
+//! ```ignore
 //! PreciseRGB {
 //!     red: 155.5,
 //!     green: 65.5,
@@ -63,6 +63,8 @@
 //! ## Standard Colors
 //! `get_standard_colors` just gets the standard Minecraft colors in form of a `HashMap<String,
 //! [u8;3]>`
+//! # Optional Features
+//! - `serde`: Derives Serialize and Deserialize for custom datatypes
 
 use color_utils::{calculate_distance, RGB};
 use core::f64;
@@ -83,6 +85,7 @@ pub use color_utils::PreciseRGB;
 /// Represents some glass panes, their DE2000 distance to the target and their calculated color
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Panes {
     panes: Vec<String>,
     distance: f64,

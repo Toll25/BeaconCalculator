@@ -41,6 +41,10 @@ Some(Panes {
 
 For further information check out the docs.
 
+# Optional Features
+
+- `serde`: Derives Serialize and Deserialize for custom datatypes
+
 # Disclaimer
 
 This project is not affiliated with, endorsed by, or associated with Microsoft or Mojang.

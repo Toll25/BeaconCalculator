@@ -30,6 +30,7 @@ impl RGB {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PreciseRGB {
     red: f64,
     green: f64,
